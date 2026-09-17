@@ -111,6 +111,19 @@ th{color:#cfe2f7;font-size:.9rem}
 td{color:#ffffff}
 .evidenceNote{margin-top:14px;border:1px dashed #3d628f;background:#0c1f36;padding:13px;border-radius:12px;color:#d9e6f5}
 
+
+.compactEvidence{margin-top:16px;border:1px dashed #3d628f;background:#0c1f36;padding:12px 14px;border-radius:12px;color:#d9e6f5}
+.compactRanking{margin-top:14px;background:#09182b;border:1px solid var(--line);border-radius:14px;padding:14px}
+.compactRanking h3{margin:0 0 4px}
+.compactRanking p{margin:0 0 10px;font-size:.86rem}
+.compactRanking .tableWrap{overflow:auto}
+.compactRanking table{width:100%;border-collapse:collapse;margin-top:4px;font-size:.9rem}
+.compactRanking th,.compactRanking td{padding:8px 9px;border-bottom:1px solid #263f5f;text-align:left;white-space:nowrap}
+.compactRanking th{color:#bfd2e9}
+.compactRanking td{color:#ffffff}
+.compactRanking tr.currentRun{background:rgba(67,200,255,.12);outline:1px solid rgba(67,200,255,.45)}
+.compactRanking .you{color:var(--cyan);font-weight:800}
+
 </style>
 </head>
 <body>
@@ -173,20 +186,6 @@ td{color:#ffffff}
   </section>
 
   <section id="results" class="hidden card hero"></section>
-
-  <section id="leaderboard" class="hidden card rankingCard">
-    <h2>🏆 Ranking local</h2>
-    <p>Este ranking registra cada finalización realizada en este navegador.</p>
-    <div class="evidenceNote"><b>Evidencia para Canvas:</b> toma una captura donde se vea tu puntaje final y este ranking desplegado.</div>
-    <div class="rankingWrap">
-      <table>
-        <thead>
-          <tr><th>#</th><th>Jugador</th><th>Puntaje</th><th>Precisión</th><th>Pistas</th><th>Tiempo</th></tr>
-        </thead>
-        <tbody id="lbBody"></tbody>
-      </table>
-    </div>
-  </section>
 </div>
 
 <script>
@@ -484,7 +483,9 @@ function privacyName(n){
 function saveLeaderboard(elapsed,precision){
   const key="identityShieldAnaliticoLeaderboard";
   const arr=JSON.parse(localStorage.getItem(key)||"[]");
+  const runId=`${Date.now()}-${Math.random().toString(36).slice(2,8)}`;
   arr.push({
+    runId,
     name:state.name,
     score:Math.max(0,state.score),
     precision,
@@ -492,16 +493,17 @@ function saveLeaderboard(elapsed,precision){
     time:elapsed,
     ts:Date.now()
   });
-  arr.sort((a,b)=>b.score-a.score || b.precision-a.precision || a.hints-b.hints || a.time-b.time);
+  arr.sort((a,b)=>b.score-a.score || b.precision-a.precision || a.hints-b.hints || a.time-b.time || a.ts-b.ts);
   localStorage.setItem(key,JSON.stringify(arr.slice(0,50)));
+  return runId;
 }
 
-function renderLeaderboard(){
+function rankingRows(currentRunId){
   const arr=JSON.parse(localStorage.getItem("identityShieldAnaliticoLeaderboard")||"[]");
-  $("lbBody").innerHTML=arr.map((r,i)=>`
-    <tr>
+  return arr.slice(0,8).map((r,i)=>`
+    <tr class="${r.runId===currentRunId?"currentRun":""}">
       <td>${i+1}</td>
-      <td>${esc(privacyName(r.name))}</td>
+      <td>${esc(privacyName(r.name))}${r.runId===currentRunId?' <span class="you">(tú)</span>':''}</td>
       <td>${r.score}</td>
       <td>${r.precision}%</td>
       <td>${r.hints}</td>
@@ -515,44 +517,68 @@ function finish(){
   const finalScore=Math.max(0,state.score);
   const grade=(finalScore/1000).toFixed(2);
   const precision=Math.max(0,Math.min(100,Math.round(((finalScore + state.hints*20)/1000)*100)));
-  let level=finalScore>=900?"Arquitecto de Identidad":finalScore>=750?"Analista de Acceso":finalScore>=600?"Defensor Digital":"Analista en formación";
-
-  saveLeaderboard(elapsed,precision);
-  renderLeaderboard();
+  const level=finalScore>=900?"Arquitecto de Identidad":finalScore>=750?"Analista de Acceso":finalScore>=600?"Defensor Digital":"Analista en formación";
+  const currentRunId=saveLeaderboard(elapsed,precision);
 
   $("results").classList.remove("hidden");
   $("results").innerHTML=`
     <div class="pill" style="display:inline-block">RETO FINALIZADO</div>
-    <div class="grid" style="margin-top:18px">
-      <div class="span6">
-        <div class="resultBig">${finalScore}/1000</div>
-        <h2>${level}</h2>
-        <p>Equivalencia sugerida: <b>${grade} / 1,00 punto</b></p>
-        <div class="breakdown">
-          <div class="scoreBox"><span class="mini muted">Precisión</span><b>${precision}%</b></div>
-          <div class="scoreBox"><span class="mini muted">Pistas</span><b>${state.hints}</b></div>
-          <div class="scoreBox"><span class="mini muted">Tiempo</span><b>${fmt(elapsed)}</b></div>
+
+    <div class="grid" style="margin-top:14px">
+      <div class="span8">
+        <div style="display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap">
+          <div>
+            <div class="resultBig">${finalScore}/1000</div>
+            <h2 style="margin-bottom:4px">${level}</h2>
+            <p style="margin:0">Equivalencia sugerida: <b>${grade} / 1,00 punto</b></p>
+          </div>
+          <div class="breakdown" style="flex:1;margin:0;min-width:280px">
+            <div class="scoreBox"><span class="mini muted">Precisión</span><b>${precision}%</b></div>
+            <div class="scoreBox"><span class="mini muted">Pistas</span><b>${state.hints}</b></div>
+            <div class="scoreBox"><span class="mini muted">Tiempo</span><b>${fmt(elapsed)}</b></div>
+          </div>
         </div>
       </div>
-      <div class="span6">
-        <h3>Ideas que debías conectar</h3>
-        <p>• NIST organiza objetivos de gestión, no solo herramientas.</p>
-        <p>• Identificación, autenticación, autorización y sesión resuelven preguntas distintas.</p>
-        <p>• MFA depende de combinar factores diferentes, no de contar pasos.</p>
-        <p>• Una sesión comprometida puede seguir siendo válida aunque cambie la contraseña.</p>
+
+      <div class="span4">
+        <div class="compactEvidence">
+          <b>Evidencia para Canvas</b><br>
+          Pulsa <b>VER RANKING</b> y toma una sola captura donde se vea este resultado y tu registro en el ranking.
+        </div>
+        <button class="btn primary" id="rankingBtn" style="width:100%;margin-top:12px">🏆 VER RANKING</button>
       </div>
     </div>
-    <div class="evidenceNote"><b>Entrega:</b> pulsa <b>VER RANKING</b> y toma una captura donde aparezcan simultáneamente tu resultado final y el ranking. El ranking conserva cada finalización realizada en este navegador.</div>
-    <div style="margin-top:18px">
-      <button class="btn primary" id="rankingBtn">🏆 VER RANKING</button>
+
+    <div id="compactRanking" class="compactRanking hidden">
+      <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-end;flex-wrap:wrap">
+        <div>
+          <h3>🏆 Ranking local</h3>
+          <p>Se muestran las 8 mejores finalizaciones registradas en este navegador.</p>
+        </div>
+        <div class="pill">Tu ejecución actual aparece resaltada</div>
+      </div>
+
+      <div class="tableWrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th><th>Jugador</th><th>Puntaje</th><th>Precisión</th><th>Pistas</th><th>Tiempo</th>
+            </tr>
+          </thead>
+          <tbody id="compactLbBody"></tbody>
+        </table>
+      </div>
     </div>`;
 
   $("rankingBtn").addEventListener("click",()=>{
-    $("leaderboard").classList.remove("hidden");
-    renderLeaderboard();
-    $("leaderboard").scrollIntoView({behavior:"smooth",block:"start"});
+    $("compactLbBody").innerHTML=rankingRows(currentRunId);
+    $("compactRanking").classList.remove("hidden");
+    $("rankingBtn").disabled=true;
+    $("rankingBtn").textContent="🏆 RANKING DESPLEGADO";
+    setTimeout(()=>{$("results").scrollIntoView({behavior:"smooth",block:"start"});},100);
   });
 }
+
 </script>
 </body>
 </html>
