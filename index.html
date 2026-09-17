@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Identity Shield · Challenge Analítico</title>
+<style>
+:root{
+  --bg:#07111f; --panel:#0f1c2d; --panel2:#13263d; --line:#2b4669;
+  --text:#f4f7fb; --muted:#a8b8cc; --cyan:#43c8ff; --teal:#39d5b0;
+  --gold:#f5c258; --red:#ff7171; --green:#68dc91;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial;
+  background:linear-gradient(135deg,#06101c,#0a1730 55%,#07111f);
+  color:var(--text);
+  min-height:100vh
+}
+button,input,select,option{font:inherit}
+.wrap{max-width:1180px;margin:auto;padding:24px}
+.top{display:flex;justify-content:space-between;gap:14px;align-items:center;margin-bottom:18px;flex-wrap:wrap}
+.brand{font-weight:900;font-size:1.18rem}.brand span{color:var(--cyan)}
+.pill{background:#0c2038;border:1px solid var(--line);padding:8px 12px;border-radius:999px;color:var(--muted);font-size:.9rem}
+.card{background:rgba(15,28,45,.96);border:1px solid var(--line);border-radius:20px;padding:22px;box-shadow:0 20px 50px rgba(0,0,0,.22)}
+.hero{padding:34px}
+h1{font-size:clamp(2.1rem,5vw,4.4rem);line-height:.95;margin:0 0 16px}
+h2{margin:0 0 10px;font-size:1.65rem} h3{margin:0 0 8px}
+p{color:var(--muted);line-height:1.55}.accent{color:var(--cyan)}
+.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:16px}
+.span4{grid-column:span 4}.span6{grid-column:span 6}.span8{grid-column:span 8}.span12{grid-column:span 12}
+@media(max-width:800px){.span4,.span6,.span8{grid-column:span 12}.wrap{padding:14px}.hero{padding:22px}}
+.field{display:flex;flex-direction:column;gap:7px;margin:12px 0}
+label{color:#d7e2ef;font-weight:700;font-size:.92rem}
+input,select{
+  background:#08182b;
+  border:1px solid #315075;
+  color:#ffffff !important;
+  -webkit-text-fill-color:#ffffff;
+  padding:13px;
+  border-radius:12px;
+  outline:none
+}
+select option{
+  background:#08182b !important;
+  color:#ffffff !important;
+}
+input:focus,select:focus{border-color:var(--cyan)}
+.btn{border:none;border-radius:12px;padding:12px 16px;font-weight:800;cursor:pointer;transition:.15s}
+.btn:hover{transform:translateY(-1px)}
+.primary{background:linear-gradient(90deg,#25bdf3,#39d5b0);color:#06101b}
+.secondary{background:#152b47;color:#ffffff;border:1px solid #34577f}
+.gold{background:var(--gold);color:#241904}
+.hidden{display:none!important}
+.progress{height:10px;background:#09182a;border-radius:999px;overflow:hidden;border:1px solid #213a58}
+.progress>div{height:100%;background:linear-gradient(90deg,var(--cyan),var(--teal));width:0;transition:width .25s}
+.stats{display:flex;gap:10px;flex-wrap:wrap}
+.stat{min-width:110px;background:#09182b;border:1px solid var(--line);border-radius:14px;padding:10px 12px}
+.stat b{display:block;font-size:1.2rem}.mini{font-size:.86rem}.muted{color:var(--muted)}
+.missionHeader{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;flex-wrap:wrap}
+.scenario{background:#09192b;border-left:5px solid var(--cyan);border-radius:14px;padding:18px;margin:16px 0}
+.evidenceGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}
+.evidence{
+  background:#0b1b2f;
+  color:#ffffff;
+  border:1px solid #2a4262;
+  border-radius:14px;
+  padding:14px;
+  cursor:pointer;
+  text-align:left;
+  line-height:1.4;
+  transition:.15s
+}
+.evidence:hover{border-color:#4d79aa}
+.evidence.selected{outline:2px solid var(--cyan);background:#0d2740;color:#ffffff}
+.options{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px;margin:14px 0}
+.opt{
+  background:#10213a;
+  border:1px solid #304a6c;
+  border-radius:12px;
+  padding:14px;
+  color:#ffffff !important;
+  -webkit-text-fill-color:#ffffff;
+  text-align:left;
+  cursor:pointer;
+  line-height:1.4
+}
+.opt:hover{border-color:var(--cyan)}
+.opt.selected{background:#143554;border-color:var(--cyan);outline:2px solid rgba(67,200,255,.28);color:#ffffff}
+.feedback{border-radius:14px;padding:14px;margin-top:14px}
+.feedback.good{background:#102e26;border:1px solid #2d7a62}
+.feedback.bad{background:#351b23;border:1px solid #874052}
+.callout{border:1px dashed #3d628f;background:#0c1f36;padding:14px;border-radius:14px;color:#c9d7e9}
+.timeline{display:flex;flex-direction:column;gap:8px}
+.event{display:flex;gap:14px;align-items:flex-start;background:#0a1728;border:1px solid var(--line);border-radius:12px;padding:12px}
+.time{color:var(--gold);font-weight:800;min-width:58px}
+.matchGrid{display:grid;grid-template-columns:1fr;gap:10px}
+.matchRow{display:grid;grid-template-columns:1.5fr 1fr;gap:12px;align-items:center;background:#0b1b30;border:1px solid var(--line);border-radius:12px;padding:12px;color:#fff}
+@media(max-width:700px){.matchRow{grid-template-columns:1fr}}
+.resultBig{font-size:3.2rem;font-weight:900;color:var(--cyan)}
+.breakdown{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-top:16px}
+.scoreBox{background:#0a1728;border:1px solid var(--line);border-radius:14px;padding:14px}
+.scoreBox b{display:block;font-size:1.35rem;margin-top:6px}
+
+.rankingCard{margin-top:16px}
+.rankingWrap{overflow:auto}
+table{width:100%;border-collapse:collapse;margin-top:12px}
+th,td{padding:11px 10px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+th{color:#cfe2f7;font-size:.9rem}
+td{color:#ffffff}
+.evidenceNote{margin-top:14px;border:1px dashed #3d628f;background:#0c1f36;padding:13px;border-radius:12px;color:#d9e6f5}
+
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="brand">🛡️ <span>Identity Shield</span> · Challenge Analítico</div>
+    <div class="stats hidden" id="hud">
+      <div class="stat"><span class="mini muted">Puntaje</span><b id="scoreHud">0/1000</b></div>
+      <div class="stat"><span class="mini muted">Progreso</span><b id="progHud">0%</b></div>
+      <div class="stat"><span class="mini muted">Pistas</span><b id="hintsHud">0</b></div>
+    </div>
+  </div>
+
+  <section id="start" class="card hero">
+    <div class="grid">
+      <div class="span8">
+        <div class="pill" style="display:inline-block;margin-bottom:14px">Actividad evaluada · 1,00 punto · 25–30 minutos</div>
+        <h1>Observa.<br><span class="accent">Relaciona.</span><br>Decide.</h1>
+        <p style="max-width:760px;font-size:1.05rem">
+          Las respuestas no están diseñadas para reconocerse por palabras clave. Tendrás que comparar evidencias,
+          distinguir objetivos de controles y decidir qué concepto explica mejor cada situación.
+        </p>
+        <div class="callout">
+          <b>Regla del juego:</b> varias opciones pueden parecer razonables, pero debes elegir la que mejor responde
+          al contexto. El puntaje total del juego equivale directamente a <b>1,00 punto</b>.
+        </div>
+      </div>
+      <div class="span4">
+        <div class="field"><label>Nombre completo</label><input id="name" placeholder="Ej. Daniela Torres"></div>
+        <button class="btn primary" style="width:100%;margin-top:10px" id="startBtn">INICIAR RETO</button>
+        <p class="mini">Las pistas reducen el puntaje. Lee todo el escenario antes de responder.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="game" class="hidden">
+    <div class="card" style="margin-bottom:14px">
+      <div class="missionHeader">
+        <div>
+          <div class="pill" id="missionBadge"></div>
+          <h2 id="missionTitle"></h2>
+          <p id="missionSubtitle"></p>
+        </div>
+        <div style="min-width:280px;flex:1;max-width:420px">
+          <div class="mini muted" style="margin-bottom:6px">Progreso</div>
+          <div class="progress"><div id="progressBar"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="challengeArea" class="card"></div>
+
+    <div style="display:flex;gap:10px;justify-content:space-between;margin-top:14px;flex-wrap:wrap">
+      <button id="hintBtn" class="btn secondary">💡 PEDIR PISTA (-20)</button>
+      <div style="display:flex;gap:10px">
+        <button id="checkBtn" class="btn primary">VALIDAR DECISIÓN</button>
+        <button id="nextBtn" class="btn gold hidden">SIGUIENTE RETO →</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="results" class="hidden card hero"></section>
+
+  <section id="leaderboard" class="hidden card rankingCard">
+    <h2>🏆 Ranking local</h2>
+    <p>Este ranking registra cada finalización realizada en este navegador.</p>
+    <div class="evidenceNote"><b>Evidencia para Canvas:</b> toma una captura donde se vea tu puntaje final y este ranking desplegado.</div>
+    <div class="rankingWrap">
+      <table>
+        <thead>
+          <tr><th>#</th><th>Jugador</th><th>Puntaje</th><th>Precisión</th><th>Pistas</th><th>Tiempo</th></tr>
+        </thead>
+        <tbody id="lbBody"></tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+<script>
+const NIST=["Gobernar","Identificar","Proteger","Detectar","Responder","Recuperar"];
+const AUTH=["Identificación","Autenticación","Autorización","Sesión"];
+const FACTORS=["Algo que sé","Algo que tengo","Algo que soy","Algo que hago","Algún lugar donde estoy"];
+
+const missions=[
+{
+  mission:1,title:"Evidencia antes que intuición",subtitle:"Distingue hechos relevantes de datos secundarios.",
+  scenario:`Una universidad investiga dos cuentas comprometidas después de una campaña de phishing. En una cuenta se observa un inicio de sesión desde otro país, una regla nueva de reenvío de correo, acceso a documentos compartidos y envío de mensajes desde la cuenta. La plataforma académica continúa disponible y no hay evidencia de cifrado.`,
+  type:"evidence",
+  max:200,
+  evidence:[
+    ["Inicio de sesión desde otro país poco después del phishing",true],
+    ["Creación de una regla nueva de reenvío de correo",true],
+    ["Acceso a documentos compartidos desde la cuenta",true],
+    ["Envío de mensajes desde la cuenta comprometida",true],
+    ["La plataforma académica siguió disponible durante el incidente",false],
+    ["No se observaron archivos cifrados en los equipos analizados",false]
+  ],
+  cia:["Confidencialidad","Integridad"],
+  hint:"Selecciona los hechos que ayudan a demostrar acceso o uso indebido de la cuenta, no simplemente datos que describen lo que NO ocurrió."
+},
+{
+  mission:2,title:"NIST: objetivo principal de la acción",subtitle:"Una misma acción puede apoyar varias funciones; elige la predominante.",
+  scenario:`Relaciona cada decisión con la función del NIST CSF 2.0 que mejor describe su propósito principal dentro de este caso.`,
+  type:"match",
+  max:200,
+  items:[
+    ["La universidad define quién puede aprobar excepciones a MFA y quién debe revisarlas.","Gobernar"],
+    ["TI mantiene una lista actualizada de cuentas privilegiadas y sistemas donde se utilizan.","Identificar"],
+    ["Se exige MFA para docentes y personal con acceso a información sensible.","Proteger"],
+    ["Se generan alertas cuando una cuenta inicia sesión desde ubicaciones o patrones atípicos.","Detectar"],
+    ["Al confirmar un compromiso, TI revoca sesiones, bloquea la cuenta y preserva evidencia.","Responder"],
+    ["Después del incidente, se restablecen credenciales y se verifica que el usuario vuelva a operar de forma segura.","Recuperar"]
+  ],
+  hint:"No te fijes solo en la herramienta. Pregunta qué objetivo principal cumple la acción: decidir, conocer, reducir, descubrir, actuar o restablecer."
+},
+{
+  mission:3,title:"Identidad, autenticación y permisos",subtitle:"No confundas quién eres, cómo lo demuestras y qué puedes hacer.",
+  scenario:`Daniela ingresa a la plataforma académica. Primero escribe su usuario. Después utiliza una contraseña y confirma un código desde una aplicación autenticadora. Ya dentro del sistema puede consultar sus calificaciones, pero no modificarlas. Mientras navega por otras páginas, el sistema no vuelve a solicitar las credenciales.`,
+  type:"matchAuth",
+  max:200,
+  items:[
+    ["Ingresar el nombre de usuario antes de presentar evidencias.","Identificación"],
+    ["Comprobar el reclamo usando contraseña y código de aplicación.","Autenticación"],
+    ["Permitir consulta de notas, pero bloquear su modificación.","Autorización"],
+    ["Mantener el estado del usuario mientras navega por la aplicación.","Sesión"]
+  ],
+  hint:"Usa estas cuatro preguntas: ¿quién dices ser?, ¿cómo lo demuestras?, ¿qué puedes hacer?, ¿cómo se conserva el estado?"
+},
+{
+  mission:4,title:"¿Realmente es multifactor?",subtitle:"Dos pasos no siempre significan dos factores.",
+  scenario:`Clasifica cada mecanismo según el factor predominante. Luego deberás decidir cuál de dos esquemas representa auténtico MFA.`,
+  type:"factors",
+  max:200,
+  items:[
+    ["Contraseña de acceso","Algo que sé"],
+    ["Aplicación autenticadora instalada en el teléfono","Algo que tengo"],
+    ["Huella digital","Algo que soy"],
+    ["Patrón de escritura en el teclado","Algo que hago"],
+    ["Acceso permitido solo desde una sede determinada","Algún lugar donde estoy"]
+  ],
+  compare:{
+    options:[
+      "Contraseña + respuesta a una pregunta secreta",
+      "Contraseña + aprobación desde una aplicación autenticadora"
+    ],
+    answer:"Contraseña + aprobación desde una aplicación autenticadora"
+  },
+  hint:"La clave no es contar pantallas, sino identificar si las evidencias pertenecen a categorías distintas."
+},
+{
+  mission:5,title:"Sesión, cookies y respuesta al incidente",subtitle:"Integra los conceptos en una situación menos evidente.",
+  scenario:`Después de iniciar sesión, el navegador recibe una cookie con un identificador de sesión. Horas después, TI confirma que la cuenta fue comprometida. El usuario cambia su contraseña, pero una sesión previamente abierta sigue activa en otro dispositivo.`,
+  type:"final",
+  max:200,
+  questions:[
+    {
+      q:"¿Cuál interpretación explica mejor el papel de la cookie observada?",
+      options:[
+        "Puede asociar solicitudes posteriores con una sesión ya autenticada",
+        "Demuestra que la contraseña se guarda dentro de la cookie del navegador",
+        "Define por sí sola los permisos que tendrá el usuario dentro del sistema",
+        "Sustituye el proceso de autenticación mientras la cuenta permanezca activa"
+      ],
+      answer:"Puede asociar solicitudes posteriores con una sesión ya autenticada"
+    },
+    {
+      q:"¿Qué acción responde mejor al riesgo de una sesión todavía válida?",
+      options:[
+        "Cambiar la contraseña y esperar a que la sesión expire por sí sola",
+        "Revocar las sesiones activas además de restablecer las credenciales",
+        "Activar una alerta para futuros accesos y conservar la sesión actual",
+        "Cambiar el nombre de usuario y mantener intactas las demás sesiones"
+      ],
+      answer:"Revocar las sesiones activas además de restablecer las credenciales"
+    },
+    {
+      q:"¿Qué secuencia NIST describe mejor lo ocurrido desde la alerta hasta volver a operar?",
+      options:[
+        "Identificar → Proteger → Gobernar",
+        "Detectar → Responder → Recuperar",
+        "Gobernar → Identificar → Proteger",
+        "Proteger → Detectar → Gobernar"
+      ],
+      answer:"Detectar → Responder → Recuperar"
+    }
+  ],
+  hint:"Separa tres cosas: cómo se mantiene la sesión, cómo se invalida un estado comprometido y qué función NIST describe cada etapa."
+}
+];
+
+let state={
+  name:"",index:0,score:0,hints:0,startTime:null,
+  ev:new Set(),cia:new Set(),match:{},compare:null,final:{}
+};
+
+const $=id=>document.getElementById(id);
+const shuffle=a=>[...a].sort(()=>Math.random()-.5);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
+
+$("startBtn").addEventListener("click",()=>{
+  const name=$("name").value.trim();
+  if(!name){alert("Ingresa tu nombre completo.");return}
+  state.name=name;state.startTime=Date.now();
+  $("start").classList.add("hidden");$("game").classList.remove("hidden");$("hud").classList.remove("hidden");
+  render();
+});
+$("hintBtn").addEventListener("click",useHint);
+$("checkBtn").addEventListener("click",check);
+$("nextBtn").addEventListener("click",next);
+
+function reset(){
+  state.ev=new Set();state.cia=new Set();state.match={};state.compare=null;state.final={};
+}
+function updateHud(){
+  $("scoreHud").textContent=`${Math.max(0,state.score)}/1000`;
+  const pct=Math.round(state.index/missions.length*100);
+  $("progHud").textContent=`${pct}%`;
+  $("hintsHud").textContent=state.hints;
+  $("progressBar").style.width=`${pct}%`;
+}
+function render(){
+  reset();updateHud();
+  const m=missions[state.index];
+  $("missionBadge").textContent=`Misión ${m.mission} de ${missions.length}`;
+  $("missionTitle").textContent=m.title;
+  $("missionSubtitle").textContent=m.subtitle;
+  $("nextBtn").classList.add("hidden");
+  $("checkBtn").classList.remove("hidden");
+  $("hintBtn").disabled=false;
+
+  let out=`<h2>${m.title}</h2><div class="scenario">${m.scenario}</div>`;
+
+  if(m.type==="evidence"){
+    out+=`<h3>1. Selecciona exactamente 4 evidencias que sostienen mejor la hipótesis de compromiso</h3><div class="evidenceGrid">`;
+    m.evidence.forEach((e,i)=>out+=`<button type="button" class="evidence" data-ev="${i}">${esc(e[0])}</button>`);
+    out+=`</div><h3 style="margin-top:18px">2. Selecciona las DOS propiedades CIA más directamente afectadas</h3><div class="options">`;
+    ["Confidencialidad","Integridad","Disponibilidad"].forEach(v=>out+=`<button type="button" class="opt cia" data-v="${v}">${v}</button>`);
+    out+=`</div>`;
+  }
+
+  if(m.type==="match"||m.type==="matchAuth"){
+    const choices=m.type==="match"?NIST:AUTH;
+    out+=`<div class="matchGrid">`;
+    m.items.forEach((it,i)=>out+=`<div class="matchRow"><div>${esc(it[0])}</div><select data-match="${i}">
+      <option value="">Selecciona…</option>
+      ${shuffle(choices).map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join("")}
+    </select></div>`);
+    out+=`</div>`;
+  }
+
+  if(m.type==="factors"){
+    out+=`<h3>1. Relaciona cada ejemplo con el factor predominante</h3><div class="matchGrid">`;
+    m.items.forEach((it,i)=>out+=`<div class="matchRow"><div>${esc(it[0])}</div><select data-match="${i}">
+      <option value="">Selecciona…</option>
+      ${shuffle(FACTORS).map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join("")}
+    </select></div>`);
+    out+=`</div><h3 style="margin-top:18px">2. ¿Cuál combinación representa mejor autenticación multifactor?</h3><div class="options">`;
+    shuffle(m.compare.options).forEach(v=>out+=`<button type="button" class="opt compare" data-v="${esc(v)}">${esc(v)}</button>`);
+    out+=`</div>`;
+  }
+
+  if(m.type==="final"){
+    m.questions.forEach((q,i)=>{
+      out+=`<div style="margin-top:${i?20:0}px"><h3>${i+1}. ${esc(q.q)}</h3><div class="options">`;
+      shuffle(q.options).forEach(v=>out+=`<button type="button" class="opt fq" data-q="${i}" data-v="${esc(v)}">${esc(v)}</button>`);
+      out+=`</div></div>`;
+    });
+  }
+
+  out+=`<div id="feedback"></div>`;
+  $("challengeArea").innerHTML=out;
+
+  document.querySelectorAll("[data-ev]").forEach(btn=>btn.addEventListener("click",()=>{
+    const i=Number(btn.dataset.ev);
+    if(state.ev.has(i))state.ev.delete(i);
+    else{
+      if(state.ev.size>=4){alert("Selecciona exactamente 4 evidencias.");return}
+      state.ev.add(i)
+    }
+    btn.classList.toggle("selected",state.ev.has(i));
+  }));
+  document.querySelectorAll(".cia").forEach(btn=>btn.addEventListener("click",()=>{
+    const v=btn.dataset.v;
+    if(state.cia.has(v))state.cia.delete(v);
+    else{
+      if(state.cia.size>=2){alert("Selecciona exactamente 2 propiedades.");return}
+      state.cia.add(v)
+    }
+    btn.classList.toggle("selected",state.cia.has(v));
+  }));
+  document.querySelectorAll("[data-match]").forEach(sel=>sel.addEventListener("change",()=>state.match[sel.dataset.match]=sel.value));
+  document.querySelectorAll(".compare").forEach(btn=>btn.addEventListener("click",()=>{
+    state.compare=btn.dataset.v;
+    document.querySelectorAll(".compare").forEach(x=>x.classList.toggle("selected",x===btn));
+  }));
+  document.querySelectorAll(".fq").forEach(btn=>btn.addEventListener("click",()=>{
+    const q=btn.dataset.q;state.final[q]=btn.dataset.v;
+    document.querySelectorAll(`.fq[data-q="${q}"]`).forEach(x=>x.classList.toggle("selected",x===btn));
+  }));
+}
+function useHint(){
+  state.score=Math.max(0,state.score-20);state.hints++;updateHud();
+  $("feedback").innerHTML=`<div class="feedback good"><b>💡 Pista:</b> ${missions[state.index].hint}</div>`;
+  $("hintBtn").disabled=true;
+}
+function check(){
+  const m=missions[state.index];
+  let pts=0,detail="";
+
+  if(m.type==="evidence"){
+    if(state.ev.size!==4||state.cia.size!==2){alert("Selecciona exactamente 4 evidencias y 2 propiedades CIA.");return}
+    let evidenceCorrect=0;
+    m.evidence.forEach((e,i)=>{
+      if(state.ev.has(i)===e[1])evidenceCorrect++;
+    });
+    const evPts=Math.round(140*(evidenceCorrect/m.evidence.length));
+    const ciaCorrect=m.cia.filter(x=>state.cia.has(x)).length;
+    const ciaPts=ciaCorrect*30;
+    pts=Math.min(200,evPts+ciaPts);
+    detail=`Evidencia: ${evidenceCorrect}/${m.evidence.length} decisiones coherentes. CIA: ${ciaCorrect}/2.`;
+  }
+
+  if(m.type==="match"||m.type==="matchAuth"){
+    if(Object.keys(state.match).length!==m.items.length||Object.values(state.match).some(v=>!v)){alert("Completa todas las relaciones.");return}
+    let good=0;m.items.forEach((it,i)=>{if(state.match[i]===it[1])good++});
+    pts=Math.round(200*(good/m.items.length));
+    detail=`Relaciones correctas: ${good}/${m.items.length}.`;
+  }
+
+  if(m.type==="factors"){
+    if(Object.keys(state.match).length!==m.items.length||Object.values(state.match).some(v=>!v)||!state.compare){alert("Completa los factores y la decisión sobre MFA.");return}
+    let good=0;m.items.forEach((it,i)=>{if(state.match[i]===it[1])good++});
+    pts=Math.round(150*(good/m.items.length));
+    if(state.compare===m.compare.answer)pts+=50;
+    detail=`Factores correctos: ${good}/${m.items.length}. Decisión MFA: ${state.compare===m.compare.answer?"correcta":"por revisar"}.`;
+  }
+
+  if(m.type==="final"){
+    if(Object.keys(state.final).length!==m.questions.length){alert("Responde las tres decisiones.");return}
+    let good=0;m.questions.forEach((q,i)=>{if(state.final[i]===q.answer)good++});
+    pts=Math.round(200*(good/m.questions.length));
+    detail=`Decisiones correctas: ${good}/${m.questions.length}.`;
+  }
+
+  state.score+=pts;updateHud();
+
+  const msg=pts===m.max
+    ? "Excelente. La misión quedó resuelta con precisión."
+    : pts>=m.max*.7
+      ? "Buen análisis. Hay una o más decisiones que conviene revisar."
+      : "Varias opciones eran plausibles; revisa qué elemento del contexto cambia la mejor respuesta.";
+
+  $("feedback").innerHTML=`<div class="feedback ${pts>=m.max*.7?"good":"bad"}"><b>${pts===m.max?"✅":"🧠"} ${msg}</b><br>${detail}<br><br><b>+${pts} puntos</b></div>`;
+  $("checkBtn").classList.add("hidden");
+  $("nextBtn").classList.remove("hidden");
+  $("hintBtn").disabled=true;
+  document.querySelectorAll("button.evidence,button.opt,select").forEach(el=>el.disabled=true);
+}
+function next(){
+  state.index++;
+  if(state.index>=missions.length){finish();return}
+  render();
+}
+function fmt(s){const m=Math.floor(s/60),ss=s%60;return `${String(m).padStart(2,"0")}:${String(ss).padStart(2,"0")}`}
+
+function privacyName(n){
+  const p=n.trim().split(/\s+/);
+  return p.length>1 ? `${p[0]} ${p[p.length-1][0]}.` : p[0];
+}
+
+function saveLeaderboard(elapsed,precision){
+  const key="identityShieldAnaliticoLeaderboard";
+  const arr=JSON.parse(localStorage.getItem(key)||"[]");
+  arr.push({
+    name:state.name,
+    score:Math.max(0,state.score),
+    precision,
+    hints:state.hints,
+    time:elapsed,
+    ts:Date.now()
+  });
+  arr.sort((a,b)=>b.score-a.score || b.precision-a.precision || a.hints-b.hints || a.time-b.time);
+  localStorage.setItem(key,JSON.stringify(arr.slice(0,50)));
+}
+
+function renderLeaderboard(){
+  const arr=JSON.parse(localStorage.getItem("identityShieldAnaliticoLeaderboard")||"[]");
+  $("lbBody").innerHTML=arr.map((r,i)=>`
+    <tr>
+      <td>${i+1}</td>
+      <td>${esc(privacyName(r.name))}</td>
+      <td>${r.score}</td>
+      <td>${r.precision}%</td>
+      <td>${r.hints}</td>
+      <td>${fmt(r.time)}</td>
+    </tr>`).join("");
+}
+
+function finish(){
+  $("game").classList.add("hidden");$("hud").classList.add("hidden");
+  const elapsed=Math.round((Date.now()-state.startTime)/1000);
+  const finalScore=Math.max(0,state.score);
+  const grade=(finalScore/1000).toFixed(2);
+  const precision=Math.max(0,Math.min(100,Math.round(((finalScore + state.hints*20)/1000)*100)));
+  let level=finalScore>=900?"Arquitecto de Identidad":finalScore>=750?"Analista de Acceso":finalScore>=600?"Defensor Digital":"Analista en formación";
+
+  saveLeaderboard(elapsed,precision);
+  renderLeaderboard();
+
+  $("results").classList.remove("hidden");
+  $("results").innerHTML=`
+    <div class="pill" style="display:inline-block">RETO FINALIZADO</div>
+    <div class="grid" style="margin-top:18px">
+      <div class="span6">
+        <div class="resultBig">${finalScore}/1000</div>
+        <h2>${level}</h2>
+        <p>Equivalencia sugerida: <b>${grade} / 1,00 punto</b></p>
+        <div class="breakdown">
+          <div class="scoreBox"><span class="mini muted">Precisión</span><b>${precision}%</b></div>
+          <div class="scoreBox"><span class="mini muted">Pistas</span><b>${state.hints}</b></div>
+          <div class="scoreBox"><span class="mini muted">Tiempo</span><b>${fmt(elapsed)}</b></div>
+        </div>
+      </div>
+      <div class="span6">
+        <h3>Ideas que debías conectar</h3>
+        <p>• NIST organiza objetivos de gestión, no solo herramientas.</p>
+        <p>• Identificación, autenticación, autorización y sesión resuelven preguntas distintas.</p>
+        <p>• MFA depende de combinar factores diferentes, no de contar pasos.</p>
+        <p>• Una sesión comprometida puede seguir siendo válida aunque cambie la contraseña.</p>
+      </div>
+    </div>
+    <div class="evidenceNote"><b>Entrega:</b> pulsa <b>VER RANKING</b> y toma una captura donde aparezcan simultáneamente tu resultado final y el ranking. El ranking conserva cada finalización realizada en este navegador.</div>
+    <div style="margin-top:18px">
+      <button class="btn primary" id="rankingBtn">🏆 VER RANKING</button>
+    </div>`;
+
+  $("rankingBtn").addEventListener("click",()=>{
+    $("leaderboard").classList.remove("hidden");
+    renderLeaderboard();
+    $("leaderboard").scrollIntoView({behavior:"smooth",block:"start"});
+  });
+}
+</script>
+</body>
+</html>
